@@ -3,715 +3,1267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoFinds - Sustainable Second-Hand Marketplace</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>EcoFinds - Sustainable Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ecoGreen: {
+                            100: '#f0fdf4',
+                            200: '#dcfce7',
+                            300: '#bbf7d0',
+                            400: '#86efac',
+                            500: '#4ade80',
+                            600: '#22c55e',
+                            700: '#16a34a',
+                            800: '#15803d',
+                            900: '#166534',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-primary {
+            background-color: #16a34a;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #15803d;
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: #4b5563;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <div id="app" x-data="appData()" x-init="init()">
-        <!-- Navigation Bar -->
-        <nav class="bg-green-600 text-white shadow-lg">
+<body class="bg-ecoGreen-50 min-h-screen">
+    <div id="app" class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-md sticky top-0 z-50">
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <i class="fas fa-leaf text-2xl"></i>
-                    <h1 class="text-xl font-bold">EcoFinds</h1>
+                    <i class="fas fa-leaf text-ecoGreen-600 text-2xl"></i>
+                    <h1 class="text-xl font-bold text-ecoGreen-700">EcoFinds</h1>
                 </div>
                 
                 <div class="hidden md:flex space-x-6">
-                    <template x-if="!user">
-                        <button @click="currentView = 'login'" class="hover:text-green-200">Login</button>
-                    </template>
-                    <template x-if="user">
-                        <button @click="currentView = 'feed'" class="hover:text-green-200">Browse</button>
-                    </template>
-                    <template x-if="user">
-                        <button @click="currentView = 'myListings'" class="hover:text-green-200">My Listings</button>
-                    </template>
-                    <template x-if="user">
-                        <button @click="currentView = 'cart'" class="hover:text-green-200">
-                            Cart <span x-text="cart.length" class="bg-green-800 text-xs rounded-full px-2 py-1 ml-1"></span>
-                        </button>
-                    </template>
+                    <button id="nav-home" class="text-gray-700 hover:text-ecoGreen-600 transition-colors">Home</button>
+                    <button id="nav-products" class="text-gray-700 hover:text-ecoGreen-600 transition-colors">Browse</button>
+                    <button id="nav-dashboard" class="text-gray-700 hover:text-ecoGreen-600 transition-colors hidden">Dashboard</button>
+                    <button id="nav-cart" class="text-gray-700 hover:text-ecoGreen-600 transition-colors relative">
+                        Cart <span id="cart-count" class="absolute -top-2 -right-4 bg-ecoGreen-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                    <button id="nav-purchases" class="text-gray-700 hover:text-ecoGreen-600 transition-colors hidden">Purchases</button>
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <template x-if="user">
+                    <div id="user-section" class="hidden">
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-green-800 rounded-full flex items-center justify-center text-sm" x-text="getInitials(user.username)"></div>
-                            <span x-text="user.username"></span>
-                            <button @click="logout()" class="ml-4 text-sm bg-green-700 hover:bg-green-800 px-3 py-1 rounded">Logout</button>
+                            <div id="user-avatar" class="w-8 h-8 bg-ecoGreen-600 rounded-full flex items-center justify-center text-white text-sm"></div>
+                            <span id="username-display"></span>
+                            <button id="btn-logout" class="ml-4 text-sm bg-ecoGreen-600 hover:bg-ecoGreen-700 px-3 py-1 rounded text-white">Logout</button>
                         </div>
-                    </template>
-                    <template x-if="!user">
-                        <button @click="currentView = 'signup'" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded">Sign Up</button>
-                    </template>
+                    </div>
+                    <div id="guest-section">
+                        <button id="btn-login" class="text-ecoGreen-600 hover:text-ecoGreen-700">Login</button>
+                        <button id="btn-signup" class="bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors ml-4">Sign Up</button>
+                    </div>
                     
                     <!-- Mobile menu button -->
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden">
-                        <i class="fas fa-bars"></i>
+                    <button id="mobile-menu-btn" class="md:hidden">
+                        <i class="fas fa-bars text-gray-700"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Mobile menu -->
-            <div x-show="mobileMenuOpen" class="md:hidden bg-green-700 px-4 py-2">
-                <template x-if="!user">
-                    <div class="flex flex-col space-y-2">
-                        <button @click="currentView = 'login'; mobileMenuOpen = false" class="text-left py-2">Login</button>
-                        <button @click="currentView = 'signup'; mobileMenuOpen = false" class="text-left py-2">Sign Up</button>
+            <div id="mobile-menu" class="hidden md:hidden bg-white px-4 py-2 border-t">
+                <div class="flex flex-col space-y-2">
+                    <button id="mobile-nav-home" class="text-left py-2 text-gray-700 hover:text-ecoGreen-600">Home</button>
+                    <button id="mobile-nav-products" class="text-left py-2 text-gray-700 hover:text-ecoGreen-600">Browse</button>
+                    <button id="mobile-nav-dashboard" class="text-left py-2 text-gray-700 hover:text-ecoGreen-600 hidden">Dashboard</button>
+                    <button id="mobile-nav-cart" class="text-left py-2 text-gray-700 hover:text-ecoGreen-600">Cart</button>
+                    <button id="mobile-nav-purchases" class="text-left py-2 text-gray-700 hover:text-ecoGreen-600 hidden">Purchases</button>
+                    <div class="border-t pt-2 mt-2 hidden" id="mobile-user-section">
+                        <button id="mobile-btn-logout" class="text-left py-2 text-red-600 hover:text-red-800">Logout</button>
                     </div>
-                </template>
-                <template x-if="user">
-                    <div class="flex flex-col space-y-2">
-                        <button @click="currentView = 'feed'; mobileMenuOpen = false" class="text-left py-2">Browse</button>
-                        <button @click="currentView = 'myListings'; mobileMenuOpen = false" class="text-left py-2">My Listings</button>
-                        <button @click="currentView = 'cart'; mobileMenuOpen = false" class="text-left py-2">
-                            Cart <span x-text="cart.length" class="bg-green-800 text-xs rounded-full px-2 py-1 ml-1"></span>
-                        </button>
-                        <button @click="currentView = 'dashboard'; mobileMenuOpen = false" class="text-left py-2">Profile</button>
-                        <button @click="logout(); mobileMenuOpen = false" class="text-left py-2">Logout</button>
-                    </div>
-                </template>
+                </div>
             </div>
-        </nav>
+        </header>
 
         <!-- Main Content -->
-        <main class="container mx-auto px-4 py-8">
+        <main class="flex-grow container mx-auto px-4 py-8">
             <!-- Login View -->
-            <div x-show="currentView === 'login'" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
-                <h2 class="text-2xl font-bold text-green-700 mb-6 text-center">Login to EcoFinds</h2>
-                <form @submit.prevent="login()">
+            <div id="view-login" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md fade-in">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6 text-center">Login to EcoFinds</h2>
+                <form id="login-form">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2" for="login-email">Email</label>
-                        <input x-model="loginEmail" type="email" id="login-email" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <input type="email" id="login-email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
                     <div class="mb-6">
                         <label class="block text-gray-700 mb-2" for="login-password">Password</label>
-                        <input x-model="loginPassword" type="password" id="login-password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <input type="password" id="login-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Login</button>
+                    <button type="submit" class="w-full bg-ecoGreen-600 text-white py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Login</button>
                 </form>
                 <p class="mt-4 text-center text-gray-600">
                     Don't have an account? 
-                    <button @click="currentView = 'signup'" class="text-green-600 hover:underline">Sign up here</button>
+                    <button id="switch-to-signup" class="text-ecoGreen-600 hover:underline">Sign up here</button>
                 </p>
             </div>
 
             <!-- Signup View -->
-            <div x-show="currentView === 'signup'" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
-                <h2 class="text-2xl font-bold text-green-700 mb-6 text-center">Join EcoFinds</h2>
-                <form @submit.prevent="signup()">
+            <div id="view-signup" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md fade-in hidden">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6 text-center">Join EcoFinds</h2>
+                <form id="signup-form">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2" for="signup-username">Username</label>
-                        <input x-model="signupUsername" type="text" id="signup-username" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <input type="text" id="signup-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2" for="signup-email">Email</label>
-                        <input x-model="signupEmail" type="email" id="signup-email" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <input type="email" id="signup-email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
                     <div class="mb-6">
                         <label class="block text-gray-700 mb-2" for="signup-password">Password</label>
-                        <input x-model="signupPassword" type="password" id="signup-password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <input type="password" id="signup-password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
-                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Sign Up</button>
+                    <button type="submit" class="w-full bg-ecoGreen-600 text-white py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Sign Up</button>
                 </form>
                 <p class="mt-4 text-center text-gray-600">
                     Already have an account? 
-                    <button @click="currentView = 'login'" class="text-green-600 hover:underline">Login here</button>
+                    <button id="switch-to-login" class="text-ecoGreen-600 hover:underline">Login here</button>
                 </p>
             </div>
 
+            <!-- Home View -->
+            <div id="view-home" class="fade-in hidden">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                    <div class="bg-ecoGreen-600 text-white p-8 text-center">
+                        <h2 class="text-3xl font-bold mb-4">Welcome to EcoFinds</h2>
+                        <p class="text-xl mb-6">Discover sustainable second-hand treasures</p>
+                        <button id="home-browse-btn" class="bg-white text-ecoGreen-700 px-6 py-3 rounded-lg font-semibold hover:bg-ecoGreen-100 transition-colors">
+                            Start Browsing
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="w-16 h-16 bg-ecoGreen-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-recycle text-ecoGreen-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Sustainable Shopping</h3>
+                        <p class="text-gray-600">Reduce waste by buying and selling pre-loved items</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="w-16 h-16 bg-ecoGreen-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-wallet text-ecoGreen-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Save Money</h3>
+                        <p class="text-gray-600">Find great deals on quality second-hand products</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="w-16 h-16 bg-ecoGreen-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-tshirt text-ecoGreen-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Various Categories</h3>
+                        <p class="text-gray-600">From clothing to electronics, find what you need</p>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-4">Featured Products</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="featured-products">
+                    <!-- Featured products will be loaded here -->
+                </div>
+            </div>
+
             <!-- Product Feed View -->
-            <div x-show="currentView === 'feed'" x-cloak>
+            <div id="view-products" class="fade-in hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start mb-6">
-                    <h2 class="text-2xl font-bold text-green-700 mb-4 md:mb-0">Discover Sustainable Finds</h2>
+                    <h2 class="text-2xl font-bold text-ecoGreen-700 mb-4 md:mb-0">Discover Sustainable Finds</h2>
                     <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
                         <div class="relative">
-                            <input x-model="searchQuery" type="text" placeholder="Search products..." class="w-full md:w-64 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <input type="text" id="search-input" placeholder="Search products..." class="w-full md:w-64 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500">
                             <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
                         </div>
-                        <select x-model="selectedCategory" class="w-full md:w-48 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <select id="category-filter" class="w-full md:w-48 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500">
                             <option value="">All Categories</option>
-                            <template x-for="category in categories" :key="category">
-                                <option x-text="category" :value="category"></option>
-                            </template>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Books">Books</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Toys">Toys</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <template x-for="product in filteredProducts" :key="product.id">
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                            <div class="h-48 bg-gray-200 flex items-center justify-center">
-                                <i class="fas fa-image text-4xl text-gray-400"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-lg mb-1" x-text="product.title"></h3>
-                                <p class="text-green-600 font-bold mb-2" x-text="'$' + product.price"></p>
-                                <p class="text-gray-600 text-sm mb-4" x-text="product.description.substring(0, 60) + '...'"></p>
-                                <div class="flex justify-between items-center">
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded" x-text="product.category"></span>
-                                    <button @click="addToCart(product)" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition">Add to Cart</button>
-                                </div>
-                                <button @click="viewProduct(product)" class="w-full mt-3 text-green-600 hover:text-green-800 text-sm">View Details</button>
-                            </div>
-                        </div>
-                    </template>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="products-container">
+                    <!-- Products will be loaded here -->
                 </div>
 
-                <div x-show="filteredProducts.length === 0" class="text-center py-12">
+                <div id="no-products-message" class="text-center py-12 hidden">
                     <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
                     <p class="text-gray-600">No products found. Try adjusting your search or filters.</p>
                 </div>
             </div>
 
             <!-- Product Detail View -->
-            <div x-show="currentView === 'productDetail'" x-cloak x-data="{ product: currentProduct }">
-                <button @click="currentView = 'feed'" class="flex items-center text-green-600 hover:text-green-800 mb-4">
-                    <i class="fas fa-arrow-left mr-2"></i> Back to Browse
-                </button>
-                
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="h-64 bg-gray-200 flex items-center justify-center">
-                        <i class="fas fa-image text-5xl text-gray-400"></i>
+            <div id="view-product-detail" class="fade-in hidden">
+                <!-- Content will be loaded dynamically -->
+            </div>
+
+            <!-- User Dashboard View -->
+            <div id="view-dashboard" class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md fade-in hidden">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6">User Profile</h2>
+                <form id="profile-form">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2" for="profile-username">Username</label>
+                        <input type="text" id="profile-username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
-                    <div class="p-6">
-                        <h2 class="text-2xl font-bold mb-2" x-text="product.title"></h2>
-                        <p class="text-green-600 font-bold text-xl mb-4" x-text="'$' + product.price"></p>
-                        <div class="mb-4">
-                            <span class="bg-green-100 text-green-800 text-sm px-3 py-1 rounded" x-text="product.category"></span>
-                        </div>
-                        <p class="text-gray-700 mb-6" x-text="product.description"></p>
-                        <div class="flex space-x-4">
-                            <button @click="addToCart(product)" class="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Add to Cart</button>
-                        </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2" for="profile-email">Email</label>
+                        <input type="email" id="profile-email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required disabled>
+                        <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                     </div>
-                </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Update Profile</button>
+                    </div>
+                </form>
             </div>
 
             <!-- My Listings View -->
-            <div x-show="currentView === 'myListings'" x-cloak>
+            <div id="view-my-listings" class="fade-in hidden">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-green-700">My Listings</h2>
-                    <button @click="showAddProductModal = true" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    <h2 class="text-2xl font-bold text-ecoGreen-700">My Listings</h2>
+                    <button id="add-product-btn" class="bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">
                         <i class="fas fa-plus mr-2"></i> Add New Product
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <template x-for="product in myProducts" :key="product.id">
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <div class="h-48 bg-gray-200 flex items-center justify-center">
-                                <i class="fas fa-image text-4xl text-gray-400"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-lg mb-1" x-text="product.title"></h3>
-                                <p class="text-green-600 font-bold mb-2" x-text="'$' + product.price"></p>
-                                <p class="text-gray-600 text-sm mb-4" x-text="product.description.substring(0, 60) + '...'"></p>
-                                <div class="flex justify-between items-center">
-                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded" x-text="product.category"></span>
-                                    <div class="flex space-x-2">
-                                        <button @click="editProduct(product)" class="text-blue-600 hover:text-blue-800">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button @click="deleteProduct(product.id)" class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="my-products-container">
+                    <!-- User's products will be loaded here -->
                 </div>
 
-                <div x-show="myProducts.length === 0" class="text-center py-12">
+                <div id="no-listings-message" class="text-center py-12 hidden">
                     <i class="fas fa-box-open text-4xl text-gray-400 mb-4"></i>
                     <p class="text-gray-600">You haven't listed any products yet.</p>
-                    <button @click="showAddProductModal = true" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    <button id="add-first-product-btn" class="mt-4 bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">
                         List Your First Product
                     </button>
                 </div>
             </div>
 
-            <!-- User Dashboard View -->
-            <div x-show="currentView === 'dashboard'" x-cloak class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
-                <h2 class="text-2xl font-bold text-green-700 mb-6">User Profile</h2>
-                <form @submit.prevent="updateProfile()">
+            <!-- Add/Edit Product View -->
+            <div id="view-add-product" class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md fade-in hidden">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6" id="product-form-title">Add New Product</h2>
+                <form id="product-form">
+                    <input type="hidden" id="product-id">
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="profile-username">Username</label>
-                        <input x-model="user.username" type="text" id="profile-username" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <label class="block text-gray-700 mb-2" for="product-title">Product Title</label>
+                        <input type="text" id="product-title" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
                     </div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="profile-email">Email</label>
-                        <input x-model="user.email" type="email" id="profile-email" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required disabled>
-                        <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                        <label class="block text-gray-700 mb-2" for="product-category">Category</label>
+                        <select id="product-category" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
+                            <option value="">Select a category</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Books">Books</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Toys">Toys</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Update Profile</button>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2" for="product-description">Description</label>
+                        <textarea id="product-description" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2" for="product-price">Price ($)</label>
+                        <input type="number" id="product-price" min="0" step="0.01" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ecoGreen-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 mb-2">Image (Placeholder)</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                            <i class="fas fa-image text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-500 text-sm">Image upload functionality would be implemented in a full version</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancel-product-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                        <button type="submit" class="bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Save Product</button>
                     </div>
                 </form>
             </div>
 
             <!-- Cart View -->
-            <div x-show="currentView === 'cart'" x-cloak>
-                <h2 class="text-2xl font-bold text-green-700 mb-6">Your Cart</h2>
+            <div id="view-cart" class="fade-in hidden">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6">Your Cart</h2>
                 
-                <template x-if="cart.length > 0">
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="divide-y divide-gray-200">
-                            <template x-for="item in cart" :key="item.id">
-                                <div class="p-4 flex items-center">
-                                    <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded flex items-center justify-center mr-4">
-                                        <i class="fas fa-image text-gray-400"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold" x-text="item.title"></h3>
-                                        <p class="text-green-600 font-bold" x-text="'$' + item.price"></p>
-                                    </div>
-                                    <button @click="removeFromCart(item.id)" class="text-red-600 hover:text-red-800">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="p-4 bg-gray-50 flex justify-between items-center">
-                            <div>
-                                <p class="font-bold">Total: <span x-text="'$' + cartTotal"></span></p>
-                            </div>
-                            <button @click="checkout()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Checkout</button>
-                        </div>
-                    </div>
-                </template>
+                <div id="cart-items-container">
+                    <!-- Cart items will be loaded here -->
+                </div>
 
-                <template x-if="cart.length === 0">
-                    <div class="text-center py-12">
-                        <i class="fas fa-shopping-cart text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">Your cart is empty.</p>
-                        <button @click="currentView = 'feed'" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Browse Products</button>
-                    </div>
-                </template>
+                <div id="empty-cart-message" class="text-center py-12 hidden">
+                    <i class="fas fa-shopping-cart text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">Your cart is empty.</p>
+                    <button id="browse-products-btn" class="mt-4 bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Browse Products</button>
+                </div>
             </div>
 
             <!-- Previous Purchases View -->
-            <div x-show="currentView === 'purchases'" x-cloak>
-                <h2 class="text-2xl font-bold text-green-700 mb-6">Previous Purchases</h2>
+            <div id="view-purchases" class="fade-in hidden">
+                <h2 class="text-2xl font-bold text-ecoGreen-700 mb-6">Previous Purchases</h2>
                 
-                <template x-if="purchases.length > 0">
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <div class="divide-y divide-gray-200">
-                            <template x-for="purchase in purchases" :key="purchase.id">
-                                <div class="p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="font-bold" x-text="purchase.title"></h3>
-                                        <p class="text-green-600 font-bold" x-text="'$' + purchase.price"></p>
-                                    </div>
-                                    <p class="text-gray-600 text-sm" x-text="purchase.description.substring(0, 100) + '...'"></p>
-                                    <div class="mt-2">
-                                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded" x-text="purchase.category"></span>
-                                        <span class="text-xs text-gray-500 ml-2" x-text="'Purchased on: ' + formatDate(purchase.purchaseDate)"></span>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </template>
+                <div id="purchases-container">
+                    <!-- Purchases will be loaded here -->
+                </div>
 
-                <template x-if="purchases.length === 0">
-                    <div class="text-center py-12">
-                        <i class="fas fa-receipt text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">You haven't made any purchases yet.</p>
-                        <button @click="currentView = 'feed'" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Browse Products</button>
-                    </div>
-                </template>
+                <div id="no-purchases-message" class="text-center py-12 hidden">
+                    <i class="fas fa-receipt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">You haven't made any purchases yet.</p>
+                    <button id="browse-products-purchases-btn" class="mt-4 bg-ecoGreen-600 text-white px-4 py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">Browse Products</button>
+                </div>
             </div>
         </main>
 
-        <!-- Add/Edit Product Modal -->
-        <div x-show="showAddProductModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <div class="p-6">
-                    <h2 class="text-xl font-bold text-green-700 mb-4" x-text="editingProduct ? 'Edit Product' : 'Add New Product'"></h2>
-                    <form @submit.prevent="saveProduct()">
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2">Product Title</label>
-                            <input x-model="currentProduct.title" type="text" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
+        <!-- Footer -->
+        <footer class="bg-ecoGreen-800 text-white py-8 mt-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">EcoFinds</h3>
+                        <p class="text-ecoGreen-200">Sustainable shopping for a better tomorrow.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Quick Links</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#" class="text-ecoGreen-200 hover:text-white transition-colors">Home</a></li>
+                            <li><a href="#" class="text-ecoGreen-200 hover:text-white transition-colors">Browse</a></li>
+                            <li><a href="#" class="text-ecoGreen-200 hover:text-white transition-colors">About Us</a></li>
+                            <li><a href="#" class="text-ecoGreen-200 hover:text-white transition-colors">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Connect With Us</h4>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-ecoGreen-200 hover:text-white transition-colors"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="text-ecoGreen-200 hover:text-white transition-colors"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-ecoGreen-200 hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="text-ecoGreen-200 hover:text-white transition-colors"><i class="fab fa-pinterest"></i></a>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2">Category</label>
-                            <select x-model="currentProduct.category" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
-                                <option value="">Select a category</option>
-                                <template x-for="category in categories" :key="category">
-                                    <option x-text="category" :value="category"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2">Description</label>
-                            <textarea x-model="currentProduct.description" rows="3" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 mb-2">Price ($)</label>
-                            <input x-model="currentProduct.price" type="number" min="0" step="0.01" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" required>
-                        </div>
-                        <div class="mb-6">
-                            <label class="block text-gray-700 mb-2">Image (Placeholder)</label>
-                            <div class="border-2 border-dashed border-gray-300 rounded p-4 text-center">
-                                <i class="fas fa-image text-3xl text-gray-400 mb-2"></i>
-                                <p class="text-gray-500 text-sm">Image upload functionality would be implemented in a full version</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" @click="closeModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">Cancel</button>
-                            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Save Product</button>
-                        </div>
-                    </form>
+                    </div>
+                </div>
+                <div class="border-t border-ecoGreen-700 mt-8 pt-8 text-center text-ecoGreen-200">
+                    <p>&copy; 2025 EcoFinds. All rights reserved.</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Toast Notification -->
-        <div x-show="showToast" x-transition x-cloak class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span x-text="toastMessage"></span>
-            </div>
-        </div>
-
-        <style>
-            [x-cloak] { display: none !important; }
-            body { min-height: 100vh; }
-        </style>
+        </footer>
     </div>
 
     <script>
-        function appData() {
-            return {
-                currentView: 'login',
-                mobileMenuOpen: false,
-                showAddProductModal: false,
-                showToast: false,
-                toastMessage: '',
-                
-                // Authentication data
-                loginEmail: '',
-                loginPassword: '',
-                signupUsername: '',
-                signupEmail: '',
-                signupPassword: '',
-                user: null,
-                
-                // Products data
-                products: [],
-                myProducts: [],
-                categories: ['Clothing', 'Electronics', 'Furniture', 'Books', 'Sports', 'Toys', 'Other'],
-                searchQuery: '',
-                selectedCategory: '',
-                
-                // Current product for editing/viewing
-                currentProduct: {
-                    id: null,
-                    title: '',
-                    category: '',
-                    description: '',
-                    price: 0,
-                    userId: null
-                },
-                editingProduct: false,
-                
-                // Cart and purchases
-                cart: [],
-                purchases: [],
-                
-                init() {
-                    // Check if user is logged in (simulating session)
-                    const savedUser = localStorage.getItem('ecofinds_user');
-                    if (savedUser) {
-                        this.user = JSON.parse(savedUser);
-                        this.currentView = 'feed';
-                    }
-                    
-                    // Load sample products
-                    this.loadSampleProducts();
-                    
-                    // Load cart from localStorage
-                    const savedCart = localStorage.getItem('ecofinds_cart');
-                    if (savedCart) this.cart = JSON.parse(savedCart);
-                    
-                    // Load purchases from localStorage
-                    const savedPurchases = localStorage.getItem('ecofinds_purchases');
-                    if (savedPurchases) this.purchases = JSON.parse(savedPurchases);
-                },
-                
-                loadSampleProducts() {
-                    // Sample products data
-                    this.products = [
-                        {
-                            id: 1,
-                            title: 'Vintage Denim Jacket',
-                            category: 'Clothing',
-                            description: 'A classic vintage denim jacket in great condition. Perfect for adding a retro touch to your outfit.',
-                            price: 25.99,
-                            userId: 2
-                        },
-                        {
-                            id: 2,
-                            title: 'Wooden Coffee Table',
-                            category: 'Furniture',
-                            description: 'Solid wooden coffee table with minimal wear. A great addition to any living room.',
-                            price: 45.50,
-                            userId: 3
-                        },
-                        {
-                            id: 3,
-                            title: 'Smartphone - Like New',
-                            category: 'Electronics',
-                            description: 'Last year\'s model smartphone in excellent condition with original box and accessories.',
-                            price: 299.99,
-                            userId: 4
-                        },
-                        {
-                            id: 4,
-                            title: 'Yoga Mat',
-                            category: 'Sports',
-                            description: 'Eco-friendly yoga mat with carrying strap. Lightly used and cleaned regularly.',
-                            price: 15.00,
-                            userId: 2
-                        },
-                        {
-                            id: 5,
-                            title: 'Classic Novel Collection',
-                            category: 'Books',
-                            description: 'Set of 5 classic novels in good condition. Perfect for literature lovers.',
-                            price: 18.75,
-                            userId: 3
-                        },
-                        {
-                            id: 6,
-                            title: 'Board Game',
-                            category: 'Toys',
-                            description: 'Popular family board game with all pieces included. Great for game nights.',
-                            price: 12.99,
-                            userId: 4
-                        }
-                    ];
-                },
-                
-                login() {
-                    // Simulate login - in a real app, this would call an API
-                    if (this.loginEmail && this.loginPassword) {
-                        // Check if user exists in localStorage
-                        const users = JSON.parse(localStorage.getItem('ecofinds_users') || '[]');
-                        const user = users.find(u => u.email === this.loginEmail && u.password === this.loginPassword);
-                        
-                        if (user) {
-                            this.user = { id: user.id, username: user.username, email: user.email };
-                            localStorage.setItem('ecofinds_user', JSON.stringify(this.user));
-                            this.currentView = 'feed';
-                            this.showNotification('Login successful!');
-                        } else {
-                            this.showNotification('Invalid email or password', false);
-                        }
-                    }
-                },
-                
-                signup() {
-                    // Simulate signup - in a real app, this would call an API
-                    if (this.signupUsername && this.signupEmail && this.signupPassword) {
-                        const users = JSON.parse(localStorage.getItem('ecofinds_users') || '[]');
-                        
-                        // Check if email already exists
-                        if (users.some(u => u.email === this.signupEmail)) {
-                            this.showNotification('Email already registered', false);
-                            return;
-                        }
-                        
-                        // Create new user
-                        const newUser = {
-                            id: Date.now(),
-                            username: this.signupUsername,
-                            email: this.signupEmail,
-                            password: this.signupPassword
-                        };
-                        
-                        users.push(newUser);
-                        localStorage.setItem('ecofinds_users', JSON.stringify(users));
-                        
-                        // Log the user in
-                        this.user = { id: newUser.id, username: newUser.username, email: newUser.email };
-                        localStorage.setItem('ecofinds_user', JSON.stringify(this.user));
-                        
-                        this.currentView = 'feed';
-                        this.showNotification('Account created successfully!');
-                    }
-                },
-                
-                logout() {
-                    this.user = null;
-                    localStorage.removeItem('ecofinds_user');
-                    this.currentView = 'login';
-                    this.showNotification('Logged out successfully');
-                },
-                
-                updateProfile() {
-                    // Update user profile
-                    const users = JSON.parse(localStorage.getItem('ecofinds_users') || '[]');
-                    const userIndex = users.findIndex(u => u.id === this.user.id);
-                    
-                    if (userIndex !== -1) {
-                        users[userIndex].username = this.user.username;
-                        localStorage.setItem('ecofinds_users', JSON.stringify(users));
-                        localStorage.setItem('ecofinds_user', JSON.stringify(this.user));
-                        this.showNotification('Profile updated successfully!');
-                    }
-                },
-                
-                get filteredProducts() {
-                    let filtered = this.products;
-                    
-                    // Filter by category
-                    if (this.selectedCategory) {
-                        filtered = filtered.filter(p => p.category === this.selectedCategory);
-                    }
-                    
-                    // Filter by search query
-                    if (this.searchQuery) {
-                        const query = this.searchQuery.toLowerCase();
-                        filtered = filtered.filter(p => 
-                            p.title.toLowerCase().includes(query) || 
-                            p.description.toLowerCase().includes(query)
-                        );
-                    }
-                    
-                    return filtered;
-                },
-                
-                viewProduct(product) {
-                    this.currentProduct = {...product};
-                    this.currentView = 'productDetail';
-                },
-                
-                addToCart(product) {
-                    if (!this.user) {
-                        this.currentView = 'login';
-                        this.showNotification('Please login to add items to cart');
-                        return;
-                    }
-                    
-                    // Check if product is already in cart
-                    if (!this.cart.some(item => item.id === product.id)) {
-                        this.cart.push({...product});
-                        localStorage.setItem('ecofinds_cart', JSON.stringify(this.cart));
-                        this.showNotification('Product added to cart!');
-                    } else {
-                        this.showNotification('Product is already in your cart');
-                    }
-                },
-                
-                removeFromCart(productId) {
-                    this.cart = this.cart.filter(item => item.id !== productId);
-                    localStorage.setItem('ecofinds_cart', JSON.stringify(this.cart));
-                    this.showNotification('Product removed from cart');
-                },
-                
-                get cartTotal() {
-                    return this.cart.reduce((total, item) => total + item.price, 0).toFixed(2);
-                },
-                
-                checkout() {
-                    if (this.cart.length === 0) return;
-                    
-                    // Add cart items to purchases
-                    const purchaseDate = new Date().toISOString();
-                    const newPurchases = this.cart.map(item => ({
-                        ...item,
-                        purchaseDate,
-                        id: Date.now() + Math.random() // Unique ID for each purchase
-                    }));
-                    
-                    this.purchases = [...this.purchases, ...newPurchases];
-                    localStorage.setItem('ecofinds_purchases', JSON.stringify(this.purchases));
-                    
-                    // Clear cart
-                    this.cart = [];
-                    localStorage.setItem('ecofinds_cart', JSON.stringify(this.cart));
-                    
-                    this.showNotification('Purchase completed successfully!');
-                    this.currentView = 'purchases';
-                },
-                
-                addNewProduct() {
-                    this.currentProduct = {
-                        id: null,
-                        title: '',
-                        category: '',
-                        description: '',
-                        price: 0,
-                        userId: this.user.id
-                    };
-                    this.editingProduct = false;
-                    this.showAddProductModal = true;
-                },
-                
-                editProduct(product) {
-                    this.currentProduct = {...product};
-                    this.editingProduct = true;
-                    this.showAddProductModal = true;
-                },
-                
-                saveProduct() {
-                    if (this.editingProduct) {
-                        // Update existing product
-                        const index = this.products.findIndex(p => p.id === this.currentProduct.id);
-                        if (index !== -1) {
-                            this.products[index] = {...this.currentProduct};
-                        }
-                    } else {
-                        // Add new product
-                        this.currentProduct.id = Date.now();
-                        this.currentProduct.userId = this.user.id;
-                        this.products.push({...this.currentProduct});
-                    }
-                    
-                    this.closeModal();
-                    this.showNotification(`Product ${this.editingProduct ? 'updated' : 'added'} successfully!`);
-                    
-                    // Update myProducts
-                    this.myProducts = this.products.filter(p => p.userId === this.user.id);
-                },
-                
-                deleteProduct(productId) {
-                    if (confirm('Are you sure you want to delete this product?')) {
-                        this.products = this.products.filter(p => p.id !== productId);
-                        this.myProducts = this.myProducts.filter(p => p.id !== productId);
-                        this.showNotification('Product deleted successfully');
-                    }
-                },
-                
-                closeModal() {
-                    this.showAddProductModal = false;
-                    this.editingProduct = false;
-                },
-                
-                showNotification(message, isSuccess = true) {
-                    this.toastMessage = message;
-                    this.showToast = true;
-                    
-                    setTimeout(() => {
-                        this.showToast = false;
-                    }, 3000);
-                },
-                
-                getInitials(username) {
-                    return username ? username.split(' ').map(n => n[0]).join('').toUpperCase() : 'US';
-                },
-                
-                formatDate(dateString) {
-                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                    return new Date(dateString).toLocaleDateString(undefined, options);
-                }
+        // Application State
+        const state = {
+            currentUser: null,
+            products: [],
+            cart: [],
+            purchases: [],
+            currentView: 'home',
+            editingProduct: null
+        };
+
+        // Sample data for demonstration
+        const sampleProducts = [
+            {
+                id: 1,
+                title: 'Vintage Denim Jacket',
+                category: 'Clothing',
+                description: 'A classic vintage denim jacket in great condition. Perfect for adding a retro touch to your outfit.',
+                price: 25.99,
+                userId: 2,
+                image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 2,
+                title: 'Wooden Coffee Table',
+                category: 'Furniture',
+                description: 'Solid wooden coffee table with minimal wear. A great addition to any living room.',
+                price: 45.50,
+                userId: 3,
+                image: 'https://images.unsplash.com/photo-1533090368676-1fd25485db88?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 3,
+                title: 'Smartphone - Like New',
+                category: 'Electronics',
+                description: 'Last year\'s model smartphone in excellent condition with original box and accessories.',
+                price: 299.99,
+                userId: 4,
+                image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 4,
+                title: 'Yoga Mat',
+                category: 'Sports',
+                description: 'Eco-friendly yoga mat with carrying strap. Lightly used and cleaned regularly.',
+                price: 15.00,
+                userId: 2,
+                image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 5,
+                title: 'Classic Novel Collection',
+                category: 'Books',
+                description: 'Set of 5 classic novels in good condition. Perfect for literature lovers.',
+                price: 18.75,
+                userId: 3,
+                image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 6,
+                title: 'Board Game',
+                category: 'Toys',
+                description: 'Popular family board game with all pieces included. Great for game nights.',
+                price: 12.99,
+                userId: 4,
+                image: 'https://images.unsplash.com/photo-1585504198191-3c4fc0a45719?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            }
+        ];
+
+        const sampleUsers = [
+            { id: 1, username: 'demo', email: 'demo@ecofinds.com', password: 'password' }
+        ];
+
+        // Conversion rate: 1 USD = 83 INR (approx)
+        const USD_TO_INR = 83;
+
+        // Initialize the application
+        function init() {
+            // Load sample data
+            state.products = sampleProducts;
+            
+            // Check if user is logged in (from localStorage)
+            const savedUser = localStorage.getItem('ecofinds_user');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+                updateUIForAuthState();
+            }
+            
+            // Load cart from localStorage
+            const savedCart = localStorage.getItem('ecofinds_cart');
+            if (savedCart) {
+                state.cart = JSON.parse(savedCart);
+                updateCartCount();
+            }
+            
+            // Load purchases from localStorage
+            const savedPurchases = localStorage.getItem('ecofinds_purchases');
+            if (savedPurchases) {
+                state.purchases = JSON.parse(savedPurchases);
+            }
+            
+            // Render home view
+            showView('home');
+            renderFeaturedProducts();
+            
+            // Setup event listeners
+            setupEventListeners();
+        }
+
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.getElementById('nav-home').addEventListener('click', () => showView('home'));
+            document.getElementById('nav-products').addEventListener('click', () => showView('products'));
+            document.getElementById('nav-dashboard').addEventListener('click', () => showView('dashboard'));
+            document.getElementById('nav-cart').addEventListener('click', () => showView('cart'));
+            document.getElementById('nav-purchases').addEventListener('click', () => showView('purchases'));
+            
+            // Mobile navigation
+            document.getElementById('mobile-nav-home').addEventListener('click', () => {
+                showView('home');
+                toggleMobileMenu();
+            });
+            document.getElementById('mobile-nav-products').addEventListener('click', () => {
+                showView('products');
+                toggleMobileMenu();
+            });
+            document.getElementById('mobile-nav-dashboard').addEventListener('click', () => {
+                showView('dashboard');
+                toggleMobileMenu();
+            });
+            document.getElementById('mobile-nav-cart').addEventListener('click', () => {
+                showView('cart');
+                toggleMobileMenu();
+            });
+            document.getElementById('mobile-nav-purchases').addEventListener('click', () => {
+                showView('purchases');
+                toggleMobileMenu();
+            });
+            
+            // Auth related
+            document.getElementById('btn-login').addEventListener('click', () => showView('login'));
+            document.getElementById('btn-signup').addEventListener('click', () => showView('signup'));
+            document.getElementById('switch-to-signup').addEventListener('click', () => showView('signup'));
+            document.getElementById('switch-to-login').addEventListener('click', () => showView('login'));
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('signup-form').addEventListener('submit', handleSignup);
+            document.getElementById('btn-logout').addEventListener('click', handleLogout);
+            document.getElementById('mobile-btn-logout').addEventListener('click', handleLogout);
+            
+            // Mobile menu
+            document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
+            
+            // Product related
+            document.getElementById('home-browse-btn').addEventListener('click', () => showView('products'));
+            document.getElementById('search-input').addEventListener('input', filterProducts);
+            document.getElementById('category-filter').addEventListener('change', filterProducts);
+            document.getElementById('add-product-btn').addEventListener('click', () => showAddProductForm());
+            document.getElementById('add-first-product-btn').addEventListener('click', () => showAddProductForm());
+            document.getElementById('product-form').addEventListener('submit', handleProductSubmit);
+            document.getElementById('cancel-product-btn').addEventListener('click', () => showView('my-listings'));
+            
+            // Profile related
+            document.getElementById('profile-form').addEventListener('submit', handleProfileUpdate);
+            
+            // Cart related
+            document.getElementById('browse-products-btn').addEventListener('click', () => showView('products'));
+            document.getElementById('browse-products-purchases-btn').addEventListener('click', () => showView('products'));
+        }
+
+        // Show a specific view
+        function showView(viewName) {
+            state.currentView = viewName;
+            
+            // Hide all views
+            document.querySelectorAll('main > div').forEach(view => {
+                view.classList.add('hidden');
+            });
+            
+            // Show the requested view
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
+            // Update navigation highlights
+            updateNavigation();
+            
+            // Load data for specific views
+            switch(viewName) {
+                case 'products':
+                    renderProducts();
+                    break;
+                case 'my-listings':
+                    renderMyListings();
+                    break;
+                case 'cart':
+                    renderCart();
+                    break;
+                case 'purchases':
+                    renderPurchases();
+                    break;
             }
         }
+
+        // Update navigation highlights
+        function updateNavigation() {
+            // This would update active states in a real app
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Update UI based on authentication state
+        function updateUIForAuthState() {
+            if (state.currentUser) {
+                // User is logged in
+                document.getElementById('user-section').classList.remove('hidden');
+                document.getElementById('guest-section').classList.add('hidden');
+                document.getElementById('nav-dashboard').classList.remove('hidden');
+                document.getElementById('nav-purchases').classList.remove('hidden');
+                document.getElementById('mobile-user-section').classList.remove('hidden');
+                
+                document.getElementById('username-display').textContent = state.currentUser.username;
+                document.getElementById('user-avatar').textContent = state.currentUser.username.charAt(0).toUpperCase();
+                document.getElementById('profile-username').value = state.currentUser.username;
+                document.getElementById('profile-email').value = state.currentUser.email;
+            } else {
+                // User is not logged in
+                document.getElementById('user-section').classList.add('hidden');
+                document.getElementById('guest-section').classList.remove('hidden');
+                document.getElementById('nav-dashboard').classList.add('hidden');
+                document.getElementById('nav-purchases').classList.add('hidden');
+                document.getElementById('mobile-user-section').classList.add('hidden');
+            }
+        }
+
+        // Handle login form submission
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            // Simple validation
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+            
+            // Check if user exists (in a real app, this would be an API call)
+            const user = sampleUsers.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                // Login successful
+                state.currentUser = { id: user.id, username: user.username, email: user.email };
+                localStorage.setItem('ecofinds_user', JSON.stringify(state.currentUser));
+                updateUIForAuthState();
+                showView('home');
+                alert('Login successful!');
+            } else {
+                // Login failed
+                alert('Invalid email or password');
+            }
+        }
+
+        // Handle signup form submission
+        function handleSignup(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            // Simple validation
+            if (!username || !email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Check if email already exists (in a real app, this would be an API call)
+            if (sampleUsers.some(u => u.email === email)) {
+                alert('Email already registered');
+                return;
+            }
+            
+            // Create new user (in a real app, this would be an API call)
+            const newUser = {
+                id: Date.now(),
+                username,
+                email,
+                password
+            };
+            
+            sampleUsers.push(newUser);
+            state.currentUser = { id: newUser.id, username: newUser.username, email: newUser.email };
+            localStorage.setItem('ecofinds_user', JSON.stringify(state.currentUser));
+            updateUIForAuthState();
+            showView('home');
+            alert('Account created successfully!');
+        }
+
+        // Handle logout
+        function handleLogout() {
+            state.currentUser = null;
+            localStorage.removeItem('ecofinds_user');
+            updateUIForAuthState();
+            showView('home');
+            alert('Logged out successfully');
+        }
+
+        // Handle profile update
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('profile-username').value;
+            
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            // Update user (in a real app, this would be an API call)
+            state.currentUser.username = username;
+            localStorage.setItem('ecofinds_user', JSON.stringify(state.currentUser));
+            updateUIForAuthState();
+            alert('Profile updated successfully!');
+        }
+
+        // Render featured products on home page
+        function renderFeaturedProducts() {
+            const container = document.getElementById('featured-products');
+            container.innerHTML = '';
+            
+            // Show only 3 featured products
+            const featuredProducts = state.products.slice(0, 3);
+            
+            featuredProducts.forEach(product => {
+                const productElement = createProductCard(product, false);
+                container.appendChild(productElement);
+            });
+        }
+
+        // Render all products
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            const noProductsMessage = document.getElementById('no-products-message');
+            container.innerHTML = '';
+            
+            if (state.products.length === 0) {
+                noProductsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noProductsMessage.classList.add('hidden');
+            
+            state.products.forEach(product => {
+                const productElement = createProductCard(product, true);
+                container.appendChild(productElement);
+            });
+        }
+
+        // Create a product card element
+        function createProductCard(product, showAddToCart = true) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-md overflow-hidden card-hover';
+            card.innerHTML = `
+                <div class="relative overflow-hidden">
+                    <img src="${product.image}" alt="${product.title}" class="w-full h-48 object-cover">
+                    <div class="absolute top-3 right-3">
+                        <button class="p-2 bg-white rounded-full shadow-md text-gray-700 hover:text-red-500 transition-colors">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <h3 class="text-white font-semibold">${product.title}</h3>
+                        <p class="text-ecoGreen-300 font-bold">₹${(product.price * USD_TO_INR).toFixed(2)}</p>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs bg-ecoGreen-100 text-ecoGreen-800 px-2 py-1 rounded-full">${product.category}</span>
+                        <span class="text-xs text-gray-500">By User${product.userId}</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">${product.description.substring(0, 60)}...</p>
+                    <div class="flex justify-between items-center">
+                        <button class="text-ecoGreen-600 hover:text-ecoGreen-800 text-sm view-details" data-id="${product.id}">View Details</button>
+                        ${showAddToCart ? `
+                        <button class="bg-ecoGreen-600 text-white px-3 py-1 rounded text-sm hover:bg-ecoGreen-700 transition-colors add-to-cart" data-id="${product.id}">
+                            Add to Cart
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners
+            if (showAddToCart) {
+                card.querySelector('.add-to-cart').addEventListener('click', () => addToCart(product));
+            }
+            
+            card.querySelector('.view-details').addEventListener('click', () => showProductDetail(product));
+            
+            return card;
+        }
+
+        // Filter products based on search and category
+        function filterProducts() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const category = document.getElementById('category-filter').value;
+            
+            const filteredProducts = state.products.filter(product => {
+                const matchesSearch = product.title.toLowerCase().includes(searchTerm) || 
+                                    product.description.toLowerCase().includes(searchTerm);
+                const matchesCategory = category === '' || product.category === category;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            const container = document.getElementById('products-container');
+            const noProductsMessage = document.getElementById('no-products-message');
+            container.innerHTML = '';
+            
+            if (filteredProducts.length === 0) {
+                noProductsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noProductsMessage.classList.add('hidden');
+            
+            filteredProducts.forEach(product => {
+                const productElement = createProductCard(product, true);
+                container.appendChild(productElement);
+            });
+        }
+
+        // Show product detail view
+        function showProductDetail(product) {
+            const view = document.getElementById('view-product-detail');
+            view.classList.remove('hidden');
+            view.innerHTML = `
+                <button class="flex items-center text-ecoGreen-600 hover:text-ecoGreen-800 mb-4 back-to-products">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Browse
+                </button>
+                
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="h-64 bg-gray-200 flex items-center justify-center">
+                        <img src="${product.image}" alt="${product.title}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-2">${product.title}</h2>
+                        <p class="text-ecoGreen-600 font-bold text-xl mb-4">₹${(product.price * USD_TO_INR).toFixed(2)}</p>
+                        <div class="mb-4">
+                            <span class="bg-ecoGreen-100 text-ecoGreen-800 text-sm px-3 py-1 rounded">${product.category}</span>
+                        </div>
+                        <p class="text-gray-700 mb-6">${product.description}</p>
+                        <div class="flex space-x-4">
+                            <button class="flex-1 bg-ecoGreen-600 text-white py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors add-to-cart-detail" data-id="${product.id}">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners
+            view.querySelector('.back-to-products').addEventListener('click', () => showView('products'));
+            view.querySelector('.add-to-cart-detail').addEventListener('click', () => {
+                addToCart(product);
+                showView('products');
+            });
+            
+            // Hide other views
+            document.querySelectorAll('main > div').forEach(div => {
+                if (div.id !== 'view-product-detail') {
+                    div.classList.add('hidden');
+                }
+            });
+        }
+
+        // Add product to cart
+        function addToCart(product) {
+            if (!state.currentUser) {
+                alert('Please login to add items to cart');
+                showView('login');
+                return;
+            }
+            
+            // Check if product is already in cart
+            const existingItem = state.cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                state.cart.push({
+                    ...product,
+                    quantity: 1
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('ecofinds_cart', JSON.stringify(state.cart));
+            
+            // Update cart count
+            updateCartCount();
+            
+            alert('Product added to cart!');
+        }
+
+        // Update cart count in navigation
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            const totalItems = state.cart.reduce((total, item) => total + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                cartCount.textContent = totalItems;
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
+        }
+
+        // Render cart items
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            const emptyMessage = document.getElementById('empty-cart-message');
+            container.innerHTML = '';
+            
+            if (state.cart.length === 0) {
+                emptyMessage.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+            
+            emptyMessage.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            let total = 0;
+            
+            state.cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'bg-white rounded-lg shadow-md p-4 mb-4 flex items-center';
+                cartItem.innerHTML = `
+                    <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded flex items-center justify-center mr-4">
+                        <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover rounded">
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold">${item.title}</h3>
+                        <p class="text-ecoGreen-600 font-bold">₹${(item.price * USD_TO_INR).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="text-gray-500 change-quantity" data-id="${item.id}" data-action="decrease">-</button>
+                        <span class="mx-2">${item.quantity}</span>
+                        <button class="text-gray-500 change-quantity" data-id="${item.id}" data-action="increase">+</button>
+                    </div>
+                    <button class="ml-4 text-red-600 hover:text-red-800 remove-from-cart" data-id="${item.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                container.appendChild(cartItem);
+            });
+            
+            // Add total and checkout button
+            const checkoutSection = document.createElement('div');
+            checkoutSection.className = 'bg-white p-4 rounded-lg shadow-md mt-6';
+            checkoutSection.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <p class="font-bold">Total:</p>
+                    <p class="text-ecoGreen-600 font-bold text-xl">₹${(total * USD_TO_INR).toFixed(2)}</p>
+                </div>
+                <button id="checkout-btn" class="w-full bg-ecoGreen-600 text-white py-2 rounded-lg hover:bg-ecoGreen-700 transition-colors">
+                    Checkout
+                </button>
+            `;
+            
+            container.appendChild(checkoutSection);
+            
+            // Add event listeners
+            document.querySelectorAll('.change-quantity').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const action = e.target.dataset.action;
+                    updateCartQuantity(id, action);
+                });
+            });
+            
+            document.querySelectorAll('.remove-from-cart').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.closest('button').dataset.id);
+                    removeFromCart(id);
+                });
+            });
+            
+            document.getElementById('checkout-btn').addEventListener('click', handleCheckout);
+        }
+
+        // Update item quantity in cart
+        function updateCartQuantity(productId, action) {
+            const item = state.cart.find(item => item.id === productId);
+            
+            if (action === 'increase') {
+                item.quantity += 1;
+            } else if (action === 'decrease') {
+                item.quantity -= 1;
+                
+                if (item.quantity === 0) {
+                    removeFromCart(productId);
+                    return;
+                }
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('ecofinds_cart', JSON.stringify(state.cart));
+            
+            // Update cart display
+            renderCart();
+            updateCartCount();
+        }
+
+        // Remove item from cart
+        function removeFromCart(productId) {
+            state.cart = state.cart.filter(item => item.id !== productId);
+            
+            // Save to localStorage
+            localStorage.setItem('ecofinds_cart', JSON.stringify(state.cart));
+            
+            // Update cart display
+            renderCart();
+            updateCartCount();
+        }
+
+        // Handle checkout
+        function handleCheckout() {
+            if (state.cart.length === 0) {
+                alert('Your cart is empty');
+                return;
+            }
+            
+            // Create purchase records
+            const purchaseDate = new Date().toISOString();
+            const newPurchases = state.cart.map(item => ({
+                ...item,
+                purchaseDate,
+                id: Date.now() + Math.random() // Unique ID for each purchase
+            }));
+            
+            // Add to purchases
+            state.purchases = [...state.purchases, ...newPurchases];
+            localStorage.setItem('ecofinds_purchases', JSON.stringify(state.purchases));
+            
+            // Clear cart
+            state.cart = [];
+            localStorage.setItem('ecofinds_cart', JSON.stringify(state.cart));
+            updateCartCount();
+            
+            // Show success message
+            alert('Purchase completed successfully!');
+            
+            // Go to purchases view
+            showView('purchases');
+        }
+
+        // Render user's product listings
+        function renderMyListings() {
+            if (!state.currentUser) {
+                alert('Please login to view your listings');
+                showView('login');
+                return;
+            }
+            
+            const container = document.getElementById('my-products-container');
+            const noListingsMessage = document.getElementById('no-listings-message');
+            container.innerHTML = '';
+            
+            // Filter products by current user
+            const userProducts = state.products.filter(product => product.userId === state.currentUser.id);
+            
+            if (userProducts.length === 0) {
+                noListingsMessage.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+            
+            noListingsMessage.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            userProducts.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
+                productElement.innerHTML = `
+                    <div class="h-48 bg-gray-200 flex items-center justify-center">
+                        <img src="${product.image}" alt="${product.title}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">${product.title}</h3>
+                        <p class="text-ecoGreen-600 font-bold mb-2">₹${(product.price * USD_TO_INR).toFixed(2)}</p>
+                        <p class="text-gray-600 text-sm mb-4">${product.description.substring(0, 60)}...</p>
+                        <div class="flex justify-between items-center">
+                            <span class="bg-ecoGreen-100 text-ecoGreen-800 text-xs px-2 py-1 rounded-full">${product.category}</span>
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800 edit-product" data-id="${product.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800 delete-product" data-id="${product.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(productElement);
+                
+                // Add event listeners
+                productElement.querySelector('.edit-product').addEventListener('click', () => editProduct(product));
+                productElement.querySelector('.delete-product').addEventListener('click', () => deleteProduct(product.id));
+            });
+        }
+
+        // Show add product form
+        function showAddProductForm() {
+            if (!state.currentUser) {
+                alert('Please login to add products');
+                showView('login');
+                return;
+            }
+            
+            state.editingProduct = null;
+            document.getElementById('product-form-title').textContent = 'Add New Product';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-id').value = '';
+            showView('add-product');
+        }
+
+        // Edit product
+        function editProduct(product) {
+            state.editingProduct = product;
+            document.getElementById('product-form-title').textContent = 'Edit Product';
+            document.getElementById('product-id').value = product.id;
+            document.getElementById('product-title').value = product.title;
+            document.getElementById('product-category').value = product.category;
+            document.getElementById('product-description').value = product.description;
+            document.getElementById('product-price').value = product.price;
+            showView('add-product');
+        }
+
+        // Handle product form submission
+        function handleProductSubmit(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('product-title').value;
+            const category = document.getElementById('product-category').value;
+            const description = document.getElementById('product-description').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+            const id = document.getElementById('product-id').value;
+            
+            if (!title || !category || !description || isNaN(price)) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+            
+            const productData = {
+                title,
+                category,
+                description,
+                price,
+                userId: state.currentUser.id,
+                image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'
+            };
+            
+            if (id) {
+                // Update existing product
+                productData.id = parseInt(id);
+                updateProduct(productData);
+            } else {
+                // Add new product
+                addNewProduct(productData);
+            }
+        }
+
+        // Add new product
+        function addNewProduct(productData) {
+            productData.id = Date.now();
+            state.products.unshift(productData);
+            showView('my-listings');
+            alert('Product added successfully!');
+        }
+
+        // Update product
+        function updateProduct(productData) {
+            const index = state.products.findIndex(p => p.id === productData.id);
+            
+            if (index !== -1) {
+                state.products[index] = { ...state.products[index], ...productData };
+                showView('my-listings');
+                alert('Product updated successfully!');
+            }
+        }
+
+        // Delete product
+        function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+                return;
+            }
+            
+            state.products = state.products.filter(product => product.id !== productId);
+            renderMyListings();
+            alert('Product deleted successfully');
+        }
+
+        // Render purchase history
+        function renderPurchases() {
+            if (!state.currentUser) {
+                alert('Please login to view your purchases');
+                showView('login');
+                return;
+            }
+            
+            const container = document.getElementById('purchases-container');
+            const noPurchasesMessage = document.getElementById('no-purchases-message');
+            container.innerHTML = '';
+            
+            // Filter purchases by current user
+            const userPurchases = state.purchases.filter(purchase => purchase.userId === state.currentUser.id);
+            
+            if (userPurchases.length === 0) {
+                noPurchasesMessage.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+            
+            noPurchasesMessage.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            userPurchases.forEach(purchase => {
+                const purchaseElement = document.createElement('div');
+                purchaseElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
+                purchaseElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium">${purchase.title}</h3>
+                        <p class="text-ecoGreen-600 font-bold">₹${(purchase.price * USD_TO_INR).toFixed(2)}</p>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-gray-500">
+                        <span>Quantity: ${purchase.quantity}</span>
+                        <span>Purchased on: ${new Date(purchase.purchaseDate).toLocaleDateString()}</span>
+                    </div>
+                `;
+                
+                container.appendChild(purchaseElement);
+            });
+        }
+
+        // Initialize the app when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
